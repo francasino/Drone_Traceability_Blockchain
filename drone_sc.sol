@@ -2,7 +2,7 @@ pragma solidity ^0.4.24;
 
 contract Drone_logistics{
 
-	//MODEL  a candidate
+	
 	struct Product {
 		uint id;
 		string name;
