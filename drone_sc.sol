@@ -147,5 +147,15 @@ contract Drone_logistics{
     	// reference the mapping with the key (that is the count). We assign the value to 
     	// the mapping, the count will be the ID.  
     }
+    
+    function retrieveHash () public returns (uint){ 
+    	//computehash according to unique characteristics
+    	// hash has to identify a unique transaction so timestamp and locations and products should be used.
+    	// this example hashes the transaction as a whole.
+    	uint nonce;
+    	bytes32 hash = sha3(block.number, msg.data, nonce++) 
+    	return hash;
+
+    }
 
 }
