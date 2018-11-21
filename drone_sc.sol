@@ -148,5 +148,4 @@ contract Drone_logistics{
     	// the mapping, the count will be the ID.  
     }
 
-
 }
