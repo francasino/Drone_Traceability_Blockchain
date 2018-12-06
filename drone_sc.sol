@@ -1,4 +1,5 @@
 pragma solidity ^0.4.24;
+pragma experimental ABIEncoderV2;
 
 contract Drone_logistics{
 
@@ -8,8 +9,11 @@ contract Drone_logistics{
 		string name;
 		uint quantity;
 		string others;  // for QOs or conditions, location etc
+		uint numberoftraces;
+		uint numberoftemperatures;
 		uint [] tracesProduct; // the ID of the traces of the product
         uint [] temperaturesProduct;
+        address maker; // who  updates
 	}
 	// key is a uint, later corresponding to the product id
 	// what we store (the value) is a Product
@@ -17,11 +21,12 @@ contract Drone_logistics{
 	mapping(uint => Product) private products; // public, so that w can access with a free function 
 
 	struct Traces {
-		uint id:
+		uint id;
 		uint id_product;
 		string location;
 		string temp_owner;
 		string timestamp;
+		address maker; // who  updates
 	}
 
 	mapping(uint => Traces) private traces; // public, so that w can access with a free function 
@@ -31,10 +36,11 @@ contract Drone_logistics{
 	// useful also to iterate the mapping 
 
     struct Temperature {  // we use celsious
-        uint id:
+        uint id;
         uint id_product;
         uint celsius; // the number
         string timestamp;
+        address maker; // who  updates
     }
 
     mapping(uint => Temperature) private temperatures; // public, so that w can access with a free function 
@@ -51,12 +57,12 @@ contract Drone_logistics{
 
 	//declare address of the participants
 	address constant public customer = 0xE0f5206BBD039e7b0592d8918820024e2a7437b9;
-	address constant public manager = 0xE0f5206BBD039e7b0592d8918820024e2a743445;
-	address constant public deliverer = 0xE0f5206BBD039e7b0592d8918820024e2a743222;
+	address constant public manager = 0xE0F5206bbd039E7B0592D8918820024E2a743445;
+	address constant public deliverer = 0xE0F5206bbd039e7b0592d8918820024E2A743222;
 
-	private bool triggered;
-	private bool delivery;
-	private bool received;
+	bool private  triggered;
+	bool private  delivery;
+	bool private  received;
 
 
 	// event, voted event. this will trigger when we want
@@ -74,9 +80,9 @@ contract Drone_logistics{
 	);
 
 
-	function Drone_logistics (uint _droneId) public { // constructor, creates order. we map starting from id=1
-	 	addProduct(1,"Example",200, "Delivey in 3 days, temperature X");
-	 	addTrace(1,1,"some coordinates", "name or address of actual owner","timestamp");
+	constructor (uint _droneId) public { // constructor, creates order. we map starting from id=1
+	 	addProduct("Example",200, "Delivey in 3 days, temperature X");
+	 	addTrace(1,"some coordinates", "name or address of actual owner","timestamp");
 	 	triggered=false;
 	 	delivery=false;
 	 	received=false;
@@ -95,13 +101,19 @@ contract Drone_logistics{
     // otherwise the conditions of the accepted contract could change
     function addProduct (string _name, uint _quantity, string _others) private {
     	productsCount ++; // inc count at the begining. represents ID also. 
-    	products[productsCount] = Product(productsCount, _name,_quantity,_others);
+    	products[productsCount].id = productsCount; 
+        products[productsCount].name = _name;
+        products[productsCount].quantity = _quantity;
+        products[productsCount].others = _others;
+        products[productsCount].numberoftraces = 0;
+        products[productsCount].numberoftemperatures = 0; 
+        products[productsCount].maker = msg.sender;
     	// reference the mapping with the key (that is the count). We assign the value to 
     	// the mapping, the count will be the ID.  
     }
 
     // returns the number of products, needed to iterate the mapping and to know info about the order.
-    function getNumberOfProducts () returns (uint){
+    function getNumberOfProducts () public view returns (uint){
     	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
     	
     	return productsCount;
@@ -119,7 +131,7 @@ contract Drone_logistics{
     // function to check the contents of the contract, the customer will check it and later will trigger if correct
     // only customer can check it 
     // customer will loop outside for this, getting the number of products before with getNumberOfProducts
-    function getProduct (uint _productId) returns (Product) {
+    function getOrder (uint _productId) public view returns (Product) {
     	require(msg.sender==customer);
     	require(_productId > 0 && _productId <= productsCount); 
 
@@ -139,26 +151,28 @@ contract Drone_logistics{
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
     	
     	tracesCount ++; // inc count at the begining. represents ID also. 
-    	traces[tracesCount] = Trace(tracesCount, _location,_temp_owner,_timestamp);
+    	traces[tracesCount] = Trace(tracesCount, _productId, _location,_temp_owner,_timestamp,msg.sender);
     	products[_productId].tracesProduct.push(tracesCount); // we store the trace reference in the corresponding product
+    	products[_productId].numberoftraces++;
     	// this will give us the set of ID traces about our productid
     	emit updateEvent();
     }
 
-    function addTemperature (uint _productId, string _celsius, string _timestamp) public {  // acts as update temperature
+    function addTemperature (uint _productId, uint _celsius, string _timestamp) public {  // acts as update temperature
         require(msg.sender==vendor || msg.sender==deliverer);
         require(_productId > 0 && _productId <= productsCount); // check if product exists
         
         temperaturesCount ++; // inc count at the begining. represents ID also. 
-        temperatures[temperaturesCount] = Trace(temperaturesCount, _celsius,_timestamp);
+        temperatures[temperaturesCount] = Temperature(temperaturesCount, _productId, _celsius,_timestamp,msg.sender);
         products[_productId].temperaturesProduct.push(temperaturesCount); // we store the trace reference in the corresponding product
+        products[_productId].numberoftemperatures++;
         // this will give us the set of ID temperatures about our productid
         emit updateEvent();
     }
 
     // returns the number of traced locations
     //useful for generic statistical purposes
-    function getNumberOfTraces () returns (uint) public{
+    function getNumberOfTraces () public view returns (uint) {
     	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
     	
     	return tracesCount;
@@ -167,15 +181,15 @@ contract Drone_logistics{
 
      // returns the number of registered temperatures
     //useful for generic statistical purposes
-    function getNumberOfTemperatures () returns (uint) public{
+    function getNumberOfTemperatures () public view returns (uint) {
         require(msg.sender==customer || msg.sender==vendor || msg.sender==deliverer);
         
-        return tempreaturesCount;
+        return temperaturesCount;
     }
 
 
     // get a trace
-    function getTrace (uint _traceId) returns (Trace) public {
+    function getTrace (uint _traceId) public view returns (Trace)  {
     	require(msg.sender==customer || msg.sender==deliverer);
     	require(_traceId > 0 && _traceId <= tracesCount); 
 
@@ -183,7 +197,7 @@ contract Drone_logistics{
     }
 
         // get a temperature
-    function getTemperature (uint _temperatureId) returns (Temperature) public {
+    function getTemperature (uint _temperatureId) public view returns (Temperature)  {
         require(msg.sender==customer || msg.sender==deliverer);
         require(_temperatureId > 0 && _temperatureId <= temperaturesCount); 
 
@@ -192,37 +206,37 @@ contract Drone_logistics{
 
 
     // returns the number of traced locations for specific product
-    function getNumberOfTracesProduct (uint _productId) returns (uint) public{
+    function getNumberOfTracesProduct (uint _productId) public view returns (uint) {
     	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
     	
-    	return _productId.tracesProduct.length;
+    	return _products[_productId].numberoftraces;
     }
 
             // returns the number of registered temperatures for specific product
-    function getNumberOfTemperaturesProduct (uint _productId) returns (uint) public{
+    function getNumberOfTemperaturesProduct (uint _productId) public view returns (uint) {
         require(msg.sender==customer || msg.sender==vendor || msg.sender==deliverer);
         require(_productId > 0 && _productId <= productsCount); // check if product exists
         
-        return _productId.temperaturesProduct.length;
+        return products[_productId].numberoftemperatures;
     }
 
 
 
     // get the array of traces of a product, later we can loop them using getTrace to obtain the data
-    function getTracesProduct (uint _productId) returns (uint []) public {
+    function getTracesProduct (uint _productId) public view returns (uint [])  {
     	require(msg.sender==customer || msg.sender==deliverer);
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
 
-    	return _productId.tracesProduct;
+    	return products[_productId].tracesProduct;
     }
 
             // get the array of temperatures of a product, later we can loop them using getTrace to obtain the data
-    function getTemperaturesProduct (uint _productId) returns (uint []) public {
+    function getTemperaturesProduct (uint _productId) public view returns (uint [])  {
         require(msg.sender==customer || msg.sender==deliverer);
         require(_productId > 0 && _productId <= productsCount); // check if product exists
 
-        return _productId.temperaturesProduct;
+        return products[_productId].temperaturesProduct;
     }
 
 
@@ -233,18 +247,16 @@ contract Drone_logistics{
     // several event triggers
 
      // returns the assigned drone. Later used for statistics etc
-    function getDroneId () returns (uint){
+    function getDroneId () public view returns (uint){
 
     	return droneId;
     }
 
-    function retrieveHash () public returns (uint){ 
+    function retrieveHash () public view returns (bytes32){ 
     	//computehash according to unique characteristics
     	// hash has to identify a unique transaction so timestamp and locations and products should be used.
-    	// this example hashes the transaction as a whole.
-    	uint nonce;
-    	bytes32 hash = sha3(block.number, msg.data, nonce++) 
-    	return hash;
+    	// this example hashes a transaction as a whole.
+    	return keccak256(abi.encodePacked(droneId, products[_productId].id, products[_productId].name, products[_productId].quantity, products[_productId].others, products[_productId].numberoftraces, products[_productId].numberoftemperatures, products[_productId].maker));
 
     }
 
