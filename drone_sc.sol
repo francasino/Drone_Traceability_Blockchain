@@ -190,7 +190,7 @@ contract Drone_logistics{
 
     // get a trace
     function getTrace (uint _traceId) public view returns (Trace)  {
-    	require(msg.sender==customer || msg.sender==deliverer);
+    	require(msg.sender==customer );
     	require(_traceId > 0 && _traceId <= tracesCount); 
 
     	return traces[_traceId];
@@ -198,7 +198,7 @@ contract Drone_logistics{
 
         // get a temperature
     function getTemperature (uint _temperatureId) public view returns (Temperature)  {
-        require(msg.sender==customer || msg.sender==deliverer);
+        require(msg.sender==customer );
         require(_temperatureId > 0 && _temperatureId <= temperaturesCount); 
 
         return temperatures[_temperatureId];
@@ -225,7 +225,7 @@ contract Drone_logistics{
 
     // get the array of traces of a product, later we can loop them using getTrace to obtain the data
     function getTracesProduct (uint _productId) public view returns (uint [])  {
-    	require(msg.sender==customer || msg.sender==deliverer);
+    	require(msg.sender==customer );
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
 
     	return products[_productId].tracesProduct;
@@ -233,7 +233,7 @@ contract Drone_logistics{
 
             // get the array of temperatures of a product, later we can loop them using getTrace to obtain the data
     function getTemperaturesProduct (uint _productId) public view returns (uint [])  {
-        require(msg.sender==customer || msg.sender==deliverer);
+        require(msg.sender==customer );
         require(_productId > 0 && _productId <= productsCount); // check if product exists
 
         return products[_productId].temperaturesProduct;
