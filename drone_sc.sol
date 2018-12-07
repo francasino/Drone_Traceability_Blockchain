@@ -58,7 +58,7 @@ contract Drone_logistics{
 	//declare address of the participants
 	address constant public customer = 0xE0f5206BBD039e7b0592d8918820024e2a7437b9;
 	address constant public manager = 0xE0F5206bbd039E7B0592D8918820024E2a743445;
-	address constant public deliverer = 0xE0F5206bbd039e7b0592d8918820024E2A743222;
+	address constant public distributor = 0xE0F5206bbd039e7b0592d8918820024E2A743222;
 
 	bool private  triggered;
 	bool private  delivery;
@@ -114,14 +114,14 @@ contract Drone_logistics{
 
     // returns the number of products, needed to iterate the mapping and to know info about the order.
     function getNumberOfProducts () public view returns (uint){
-    	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
+    	require(msg.sender==customer || msg.sender==manager || msg.sender==distributor);
     	
     	return productsCount;
     }
 
-     // only manager or deliverers
+     // only manager or distributors
     function UpdateProduct (uint _productId, string _others) public { 
-    	require(msg.sender==manager || msg.sender==deliverer);
+    	require(msg.sender==manager || msg.sender==distributor);
     	require(_productId > 0 && _productId <= productsCount); 
 
 		products[_productId].others = _others;  // update conditions
@@ -131,7 +131,7 @@ contract Drone_logistics{
     // function to check the contents of the contract, the customer will check it and later will trigger if correct
     // only customer can check it 
     // customer will loop outside for this, getting the number of products before with getNumberOfProducts
-    function getOrder (uint _productId) public view returns (Product) {
+    function getProduct (uint _productId) public view returns (Product) {
     	require(msg.sender==customer);
     	require(_productId > 0 && _productId <= productsCount); 
 
@@ -147,7 +147,7 @@ contract Drone_logistics{
     // the same for temperatures
 
     function addTrace (uint _productId, string _location, string _temp_owner, string _timestamp) public {  // acts as update location
-    	require(msg.sender==manager || msg.sender==deliverer);
+    	require(msg.sender==manager || msg.sender==distributor);
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
     	
     	tracesCount ++; // inc count at the begining. represents ID also. 
@@ -159,7 +159,7 @@ contract Drone_logistics{
     }
 
     function addTemperature (uint _productId, uint _celsius, string _timestamp) public {  // acts as update temperature
-        require(msg.sender==vendor || msg.sender==deliverer);
+        require(msg.sender==vendor || msg.sender==distributor);
         require(_productId > 0 && _productId <= productsCount); // check if product exists
         
         temperaturesCount ++; // inc count at the begining. represents ID also. 
@@ -173,7 +173,7 @@ contract Drone_logistics{
     // returns the number of traced locations
     //useful for generic statistical purposes
     function getNumberOfTraces () public view returns (uint) {
-    	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
+    	require(msg.sender==customer || msg.sender==manager || msg.sender==distributor);
     	
     	return tracesCount;
     }
@@ -182,7 +182,7 @@ contract Drone_logistics{
      // returns the number of registered temperatures
     //useful for generic statistical purposes
     function getNumberOfTemperatures () public view returns (uint) {
-        require(msg.sender==customer || msg.sender==vendor || msg.sender==deliverer);
+        require(msg.sender==customer || msg.sender==vendor || msg.sender==distributor);
         
         return temperaturesCount;
     }
@@ -207,7 +207,7 @@ contract Drone_logistics{
 
     // returns the number of traced locations for specific product
     function getNumberOfTracesProduct (uint _productId) public view returns (uint) {
-    	require(msg.sender==customer || msg.sender==manager || msg.sender==deliverer);
+    	require(msg.sender==customer || msg.sender==manager || msg.sender==distributor);
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
     	
     	return _products[_productId].numberoftraces;
@@ -215,7 +215,7 @@ contract Drone_logistics{
 
             // returns the number of registered temperatures for specific product
     function getNumberOfTemperaturesProduct (uint _productId) public view returns (uint) {
-        require(msg.sender==customer || msg.sender==vendor || msg.sender==deliverer);
+        require(msg.sender==customer || msg.sender==vendor || msg.sender==distributor);
         require(_productId > 0 && _productId <= productsCount); // check if product exists
         
         return products[_productId].numberoftemperatures;
