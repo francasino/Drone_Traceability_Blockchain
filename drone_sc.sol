@@ -14,6 +14,8 @@ contract Drone_logistics{
 		uint [] tracesProduct; // the ID of the traces of the product
         uint [] temperaturesProduct;
         address maker; // who  updates
+        string globalId; // global id in manufacturing 
+        string hashIPFS; // refernce to manufacturing description
 	}
 	// key is a uint, later corresponding to the product id
 	// what we store (the value) is a Product
@@ -80,13 +82,13 @@ contract Drone_logistics{
 	);
 
 
-	constructor (uint _droneId) public { // constructor, creates order. we map starting from id=1
-	 	addProduct("Example",200, "Delivey in 3 days, temperature X");
+	constructor () public { // constructor, creates order. we map starting from id=1,  hardcoded values of all
+	 	addProduct("Example",200, "Delivey in 3 days, temperature X","5400AA","ADDeFFtt45045594xxE3948"); //
 	 	addTrace(1,"some coordinates", "name or address of actual owner","timestamp");
 	 	triggered=false;
 	 	delivery=false;
 	 	received=false;
-	 	droneId = _droneId; // identifies the assigned drone
+	 	droneId = 1; // identifies the assigned drone
 	}
 
 
@@ -99,7 +101,7 @@ contract Drone_logistics{
     // add product to mapping. private because we dont want to be accesible or add products afterwards to our mapping. We only want
     // our contract to be able to do that, from constructor
     // otherwise the conditions of the accepted contract could change
-    function addProduct (string _name, uint _quantity, string _others) private {
+    function addProduct (string _name, uint _quantity, string _others, string _globalID, string _hashIpfs) private {
     	productsCount ++; // inc count at the begining. represents ID also. 
     	products[productsCount].id = productsCount; 
         products[productsCount].name = _name;
@@ -108,6 +110,8 @@ contract Drone_logistics{
         products[productsCount].numberoftraces = 0;
         products[productsCount].numberoftemperatures = 0; 
         products[productsCount].maker = msg.sender;
+        products[productsCount].globalId = _globalID;
+        products[productsCount].hashIPFS = _hashIpfs;
     	// reference the mapping with the key (that is the count). We assign the value to 
     	// the mapping, the count will be the ID.  
     }
@@ -138,6 +142,20 @@ contract Drone_logistics{
     	return products[_productId];
     }
 
+      function getProductGlobalID (uint _productId) public view returns (string) {
+        require(msg.sender==customer);
+        require(_productId > 0 && _productId <= productsCount); 
+
+        return products[_productId].globalId;
+    }
+
+
+      function getProductHistoric (uint _productId) public view returns (string) {
+        require(msg.sender==customer);
+        require(_productId > 0 && _productId <= productsCount); 
+
+        return products[_productId].hashIPFS;
+    }
     //TRACES and temperatures OPERATIONS********************************************
     // enables add trace to a product
     // enables total number of traces to loop
@@ -256,7 +274,7 @@ contract Drone_logistics{
     	//computehash according to unique characteristics
     	// hash has to identify a unique transaction so timestamp and locations and products should be used.
     	// this example hashes a transaction as a whole.
-    	return keccak256(abi.encodePacked(droneId, products[_productId].id, products[_productId].name, products[_productId].quantity, products[_productId].others, products[_productId].numberoftraces, products[_productId].numberoftemperatures, products[_productId].maker));
+    	return keccak256(abi.encodePacked(block.number,msg.data,droneId, products[_productId].id, products[_productId].name, products[_productId].quantity, products[_productId].others, products[_productId].numberoftraces, products[_productId].numberoftemperatures, products[_productId].maker));
 
     }
 
