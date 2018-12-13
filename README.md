@@ -7,5 +7,5 @@ The code can be used if you cite it properly:
     author = {Fran Casino},
     title = {A Smart Contract to Enable Drone-based Food Supply Chain },
     howpublished = {\url{https://github.com/francasino/Drone_Traceability_Blockchain}},
-    year=2018,
+    year={2018}
 }
