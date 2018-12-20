@@ -22,7 +22,7 @@ contract Drone_logistics{
 	// the information of this mapping is the set of products of the order.
 	mapping(uint => Product) private products; // public, so that w can access with a free function 
 
-	struct Traces {
+	struct Trace {
 		uint id;
 		uint id_product;
 		string location;
@@ -31,7 +31,7 @@ contract Drone_logistics{
 		address maker; // who  updates
 	}
 
-	mapping(uint => Traces) private traces; // public, so that w can access with a free function 
+	mapping(uint => Trace) private traces; // public, so that w can access with a free function 
 	//store products count
 	// since mappings cant be looped and is difficult the have a count like array
 	// we need a var to store the coutings  
