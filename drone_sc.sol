@@ -228,7 +228,7 @@ contract Drone_logistics{
     	require(msg.sender==customer || msg.sender==wholesaler || msg.sender==distributor);
     	require(_productId > 0 && _productId <= productsCount); // check if product exists
     	
-    	return _products[_productId].numberoftraces;
+    	return products[_productId].numberoftraces;
     }
 
             // returns the number of registered temperatures for specific product
