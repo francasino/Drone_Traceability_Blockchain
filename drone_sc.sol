@@ -270,7 +270,7 @@ contract Drone_logistics{
     	return droneId;
     }
 
-    function retrieveHash () public view returns (bytes32){ 
+    function retrieveHash (uint _productId) public view returns (bytes32){ 
     	//computehash according to unique characteristics
     	// hash has to identify a unique transaction so timestamp and locations and products should be used.
     	// this example hashes a transaction as a whole.
