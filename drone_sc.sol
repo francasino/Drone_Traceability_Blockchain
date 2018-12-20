@@ -102,7 +102,8 @@ contract Drone_logistics{
     // our contract to be able to do that, from constructor
     // otherwise the conditions of the accepted contract could change
     function addProduct (string _name, uint _quantity, string _others, string _globalID, string _hashIpfs) private {
-    	productsCount ++; // inc count at the begining. represents ID also. 
+    	require(msg.sender==vendor);
+	productsCount ++; // inc count at the begining. represents ID also. 
     	products[productsCount].id = productsCount; 
         products[productsCount].name = _name;
         products[productsCount].quantity = _quantity;
